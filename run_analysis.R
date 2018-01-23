@@ -12,6 +12,20 @@ subject_test <- read.table("./UCI HAR Dataset/test/subject_test.txt")
 ## Reading in the features
 activity_labels <- read.table("./UCI HAR Dataset/activity_labels.txt")
 features <- read.table("./UCI HAR Dataset/features.txt")
+names(X_train) <- features[,2]
+names(X_test) <- features[,2]
+names(subject_train) <- "subject"
+names(subject_test) <- "subject"
+names(y_train) <- "activity_label"
+names(y_test) <- "activity_label"
+## Merging data
+train_subject_activity <- cbind(subject_train, y_train)
+test_subject_activity <- cbind(subject_test, y_test)
+merged_train <- cbind(train_subject_activity, X_train)
+merged_test <- cbind(test_subject_activity, X_test)
+merged_train["dataset"] <- "train"
+merged_test["dataset"] <- "test"
+merged_data <- rbind(merged_train, merged_test)
 
 ## 2) Extracts only the measurements on the mean and standard deviation for each measurement.
 ## 3) Uses descriptive activity names to name the activities in the data set
