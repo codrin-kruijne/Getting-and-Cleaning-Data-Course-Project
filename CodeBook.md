@@ -56,10 +56,27 @@ names(y_test) <- "activity_label"
 ```
 
 ### Combining columns
-Now we add the subject and activity columns to both the train and test sets.
+Now we combine the loose subject and activity columns.
+```
+train_subject_activity <- cbind(subject_train, y_train)
+test_subject_activity <- cbind(subject_test, y_test)
+```
+Then we add the resulting subject and actiity columns to the measurements.
+```
+merged_train <- cbind(train_subject_activity, X_train)
+merged_test <- cbind(test_subject_activity, X_test)
 
-
+We add columns to each to identify the type of measurement group to be train or test.
+```
+merged_train["dataset"] <- "train"
+merged_test["dataset"] <- "test"
+````
 ### Combining rows
+Merging train rows with test rows and just checking whether it is all there.
+```
+merged_data <- rbind(merged_train, merged_test)
+table(merged_data[564])
+```
 
 
 ## Extracts only the measurements on the mean and standard deviation for each measurement.
