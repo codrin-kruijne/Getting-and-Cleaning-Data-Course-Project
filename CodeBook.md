@@ -8,18 +8,25 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 # My first CodeBook for Coursera Data Science course project Getting and Cleaning Data
-Assignment description at  https://www.coursera.org/learn/data-cleaning/peer/FIZtT/getting-and-cleaning-data-course-project
-Downloaded data from https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip on January 20th 2018
 
-```download.file("https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip", destfile = "projectfiles.zip")
-downloadData <- now()
-```
-We load dopler intro the library for easy selection of data.
+Assignment description at  https://www.coursera.org/learn/data-cleaning/peer/FIZtT/getting-and-cleaning-data-course-project
+
+We load dplyr package intro the library for easy selection of data.
 ```
 library(dplyr)
 ```
 
+Downloaded data from https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip on January 20th 2018
+
+```
+download.file("https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip", destfile = "projectfiles.zip")
+downloadData <- now()
+```
+
+Please unzip the downloaded file into your working directory keeping zip structure.
+
 # Data manipulation steps from assignments
+The following are the required data manipulation steps from the assignments with explanations.
 
 ##    Merges the training and the test sets to create one data set.
 First we read the data from the files; I chose similar names as the files for clarity.
@@ -31,7 +38,6 @@ subject_train <- read.table("./UCI HAR Dataset/train/subject_train.txt")
 X_test <- read.table("./UCI HAR Dataset/test/X_test.txt")
 y_test <- read.table("./UCI HAR Dataset/test/y_test.txt")
 subject_test <- read.table("./UCI HAR Dataset/test/subject_test.txt")
-## Reading in the features
 activity_labels <- read.table("./UCI HAR Dataset/activity_labels.txt")
 features <- read.table("./UCI HAR Dataset/features.txt")
 ```
@@ -69,7 +75,7 @@ Then we add the resulting subject and actiity columns to the measurements.
 ```
 merged_train <- cbind(train_subject_activity, X_train)
 merged_test <- cbind(test_subject_activity, X_test)
-
+```
 We add columns to the train and test sets to identify the type of measurement group.
 ```
 merged_train["dataset"] <- "train"
@@ -89,8 +95,10 @@ This gives us a merge_data data frame with 10299 the combination of rows from tr
 selected_data <- select(merged_data, subject, activity_label, ends_with("mean()"), ends_with("std()"))
 selected_data <- arrange(selected_data, subject)
 ```
+This gives us a dataset with 20 variables; subject, activity_label and 18 measurements, which we will appropriately rename next. We just arranged the combined data by subject so they are all in order.
 
 ## Uses descriptive activity names to name the activities in the data set
+Taking the activity labels that were originaally stored in as separate file and replacing the numbers by the more descriptive text.
 ```
 selected_data$activity_label <- factor(selected_data$activity_label, levels = activity_labels$V1, labels = activity_labels$V2)
 ```
@@ -98,10 +106,15 @@ selected_data$activity_label <- factor(selected_data$activity_label, levels = ac
 ## Appropriately labels the data set with descriptive variable names.
 Ok this is a bit of a puzzle. Basically, what we want to do is to replace the abbreviations with readable text. Body, Gravity and Jerk are already spelled out completely.
 Going through the variable list of the selected_data and the features_info.txt file that accompanied the data, this is what we can distill out of it:
+
 1. the starting t and f denote time and frequency domain signal respectively
+
 2. Acc is data from the Accelerometer
+
 3. Gyro is data from the Gyroscope
+
 4. Mag stands for magnitude of signal
+
 To improve readability we also want to add spaces, remove parenthesis and rearrange the terms to be more readable.
 
 ### Applying textual changes to improve readability of column names
@@ -115,7 +128,9 @@ colnames(selected_data) <- gsub("Mag", "magnitude ", colnames(selected_data))
 colnames(selected_data) <- gsub("std()", "standard deviation ", colnames(selected_data))
 colnames(selected_data) <- gsub("mean()", "mean value ", colnames(selected_data))
 colnames(selected_data) <- gsub(" \\(\\)$", "", colnames(selected_data))
-
+```
+To rearrange the text I wrote a function that checks for the starting character and replaces it with more readable version at the end of the column name.
+```
 time_freq_rename <- function(column_name){
     if(grepl("^t", column_name)){
       column_name <- paste(substring(column_name,2), "of time")
@@ -129,36 +144,14 @@ colnames(selected_data) <- lapply(colnames(selected_data), time_freq_rename)
 ```
 
 ## From the data set in step 4, creates a second, independent tidy data set with the average of each variable for each activity and each subject.
-
+After a lot of searching and trying I felt I had to group the data.frame and apply a mean to all, which wass possible using dplyr pipe functions!
 ```
-summarized <- selected_data %>% group_by(subject, activity_label) %>% summarize_all(mean)
+tidy_data <- selected_data %>% group_by(subject, activity_label) %>% summarize_all(mean)
 ```
-
 
 ## Submission
 Upload your data set as a txt file created with write.table() using row.name=FALSE
-
-
-
-
-
-
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```
+write.table(tidy_data, file = "tidy_data.txt", row.name=FALSE)
 ```
 
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
